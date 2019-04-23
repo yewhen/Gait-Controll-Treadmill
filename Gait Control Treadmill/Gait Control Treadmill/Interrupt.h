@@ -33,28 +33,24 @@ ISR(INT0_vect){
 
 ISR(INT1_vect){
 	if (sensors[1].flag == 1){
-		//LED_TOGGLE;
 		TCCR3B = 0;
 		sensors[1].pulse = TCNT3;
 		TCNT3 = 0;
 		sensors[1].flag = 0;
 	}
-	if (sensors[1].flag == 1){
-		//LED_TOGGLE;
+	if (sensors[1].flag == 0){
 		TCCR3B |= (1<<CS10);
 		sensors[1].flag = 1;
 	}
 }
 ISR(PCINT0_vect){
 	if (sensors[2].flag == 1){
-		//LED_TOGGLE;
 		TCCR4B = 0;
 		sensors[2].pulse = TCNT4;
 		TCNT4 = 0;
 		sensors[2].flag = 0;
 	}
-	if (sensors[2].flag == 1){
-		//LED_TOGGLE;
+	if (sensors[2].flag == 0){
 		TCCR4B |= (1<<CS10);
 		sensors[2].flag = 1;
 	}
