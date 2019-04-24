@@ -25,15 +25,23 @@ void PWM_Init(){
   OCR2B = 24; //
 }
 
+void PWM_Increase_duty_8(){
+  uint8_t period = OCR0A;
+  uint8_t duty = OCR0B;
 
-/*ISR(TIMER0_COMPB_vect){
-  digitalWrite(3, LOW);
+  if (duty < period) duty++;
+  else duty = 0;
+
+  OCR0B = duty;
 }
+void PWM_Decrease_duty_8(){
+  uint8_t duty = OCR0B;
 
-ISR(TIMER0_COMPA_vect){
-  digitalWrite(3, HIGH);
-  
-}*/
+  if (duty > 0) duty--;
+  else duty = 0;
+
+  OCR0B = duty;
+}
 
 void setup() {
   int i;
@@ -46,10 +54,7 @@ void setup() {
     sensors[i].i2 = 0;
     pinMode(sensors[i].echoPin, INPUT); // Sets the echoPin as an Input
   }
-  //noInterrupts(); //disable all interupts
   PWM_Init();
-  
-  //interrupts(); //re-enable all interrupts
   Serial.begin(9600); // Starts the serial communication
 }
 
@@ -71,25 +76,5 @@ void loop() {
     // Reads the echoPin, returns the sound wave travel time in microseconds
     sensors[i].cur_dist = pulseIn(sensors[i].echoPin, HIGH) * 0.034 / 2;
   }
-  
 
-  
-
-  /*
-  //if statement is here to fill up first 10 data values before doing the processing
-  if(count > 10){
-  //DATA PROCESSING ALGORITHM: don't forget to push array values as stacks
-  // in addition, this section 
-  }
-  else
-  count++;
-  
-  //DATA INTERPOLATION TO SPEED
-  
-  //Next up is the controls algorithm
-  
-  
-  // Prints the distance on the Serial Monitor
-  Serial.print("Distance: ");
-  Serial.println(distance1 distance2 distance3);*/
 }
