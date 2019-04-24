@@ -11,28 +11,19 @@
 #define BAUD				9600
 #define MYUBBR				F_CPU/16/BAUD-1
 
-int pinEcho = PA0;
-char pinTX = PB1;
 // 1/0 flag to check if echo is over
 volatile char echoDone = 0;
 // current timer0 count
 uint32_t countTimer1 = 0;
 
-void initHCSR04(){
-    // initialize HC-SR04 pins
-    // set Trigger pin (connected to PB0) as output
-    DDRB |= (1<<PORTB3);
-    DDRD &= ~(1<<PORTD2);
-}
-
-float getDistanceHCSR04(){
+int getDistanceHCSR04(){
     // Send a 10us HIGH pulse on the Trigger pin.
     // The sensor sends out a “sonic burst” of 8 cycles.
     // Listen to the Echo pin, and the duration of the next HIGH
     // signal will give you the time taken by the sound to go back
     // and forth from sensor to target.
     
-    float distance = 0.0f;
+    int distance = 0;
 
     cli();
     // enable interrupt
@@ -55,7 +46,10 @@ float getDistanceHCSR04(){
     
     // listen for echo and time it
     // loop till echo pin goes low
-    while(!echoDone);
+    while(!echoDone){
+		LED_TOGGLE;
+		
+	}
     
     // disable pin-change interrupt:
     // disable interrupt
@@ -63,12 +57,12 @@ float getDistanceHCSR04(){
     EIMSK &= ~(1<<INT0);
     
     // calculate duration
-    float duration = countTimer1/16000000.0;
+    int duration = countTimer1/16000000;
     
     // dist = duration * speed of sound * 1/2
     // dist in cm = duration in s * 340.26 * 100 * 1/2
     // = 17013*duration
-    distance = 17013.0 * duration;
+    distance = 17013 * duration;
     
     return distance;
 }
@@ -105,22 +99,23 @@ ISR(INT0_vect){
 
 int main(){
     // HC-SR04
-    initHCSR04();
-    USART_Init();
-    // set as output
-    DDRB |= (1 << PORTB3);
+    DDRB |= (1<<PORTB3);
+    DDRD &= ~(1<<PORTD2);
+	PORTD |= (1<<PORTD2);
+    USART_Init(MYUBBR);
     
     char str[16];
     char space[] = " .";
-    float prevDist = 0.0;
+    int prevDist = 0;
 
     while (1) {
-        float dist = getDistanceHCSR04();
+        int dist = getDistanceHCSR04();
         // sensor only works till 400 cm - if it exceeds, this value just send previous reading
-        if (dist > 400 || dist < 2) dist = prevDist;
+        //if (dist > 400 || dist < 2) dist = prevDist;
         
-        sprintf(str, "%f\n", dist);
+        sprintf(str, "%d\n", dist);
         USART_putstring(str);
+		USART_putstring(space);
         prevDist = dist;
         _delay_ms(70);
     }

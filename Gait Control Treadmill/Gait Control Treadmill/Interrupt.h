@@ -21,7 +21,7 @@ ISR(TIMER0_COMPB_vect){
 	//LED_OFF;
 }
 
-ISR(INT0_vect){
+/*ISR(INT0_vect){
 	if (sensors[0].flag == 1){
 		TCCR1B = 0;
 		sensors[0].pulse = TCNT1;
@@ -44,9 +44,9 @@ ISR(INT0_vect){
 	}
 	LED_TOGGLE;
 	//_delay_ms(10000);
-}
+}*/
 
-ISR(INT1_vect){
+/*ISR(INT1_vect){
 	LED_TOGGLE;
 	//_delay_ms(10000);
 	if (sensors[1].flag == 1){
@@ -68,7 +68,7 @@ ISR(INT1_vect){
 		sensors[1].flag = 1;
 
 	}
-}
+}*/
 ISR(PCINT0_vect){
 	if (sensors[2].flag == 1){
 		TCCR4B = 0;
