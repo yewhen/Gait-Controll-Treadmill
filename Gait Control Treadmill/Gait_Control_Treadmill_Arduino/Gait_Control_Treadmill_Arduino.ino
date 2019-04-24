@@ -16,24 +16,26 @@ sensor sensors[NUM_SENSOR];
 
 void PWM_Init(){
   pinMode(3, OUTPUT);
-  TCCR0A |= (1<<WGM01);
-  TCCR0B |= (1<<CS01) | (1<<CS00); 
+  // FAST PWM mode with TOP(OCR0A)
+  
+  TCCR0A |= (1<<WGM01) | (1<<WGM00) | (1<<COM0A0); 
+  TCCR0B |= (1<<CS01) | (1<<CS00) | (1<<WGM02); 
   TCCR0B &= ~(1<<CS02);
-  TIMSK0 |= (1<<OCIE0A) | (1<<OCIE0B);
+  //TIMSK0 |= (1<<OCIE0A) | (1<<OCIE0B);
    
-  OCR0A = (F_CPU / PRESCALE / FREQ) - 1; // 5KHz
-  OCR0B = (F_CPU / PRESCALE / FREQ) * 0.5 - 1; 
+  OCR0A = F_CPU / PRESCALE / 50 / 2; // 5KHz
+  //OCR0B = (F_CPU / PRESCALE / FREQ) * 0.5 - 1; 
 }
 
 
-ISR(TIMER0_COMPB_vect){
+/*ISR(TIMER0_COMPB_vect){
   digitalWrite(3, LOW);
 }
 
 ISR(TIMER0_COMPA_vect){
   digitalWrite(3, HIGH);
   
-}
+}*/
 
 void setup() {
   int i;
@@ -45,10 +47,10 @@ void setup() {
     sensors[i].i2 = 0;
     pinMode(sensors[i].echoPin, INPUT); // Sets the echoPin as an Input
   }
-  noInterrupts(); //disable all interupts
+  //noInterrupts(); //disable all interupts
   PWM_Init();
   
-  interrupts(); //re-enable all interrupts
+  //interrupts(); //re-enable all interrupts
   Serial.begin(9600); // Starts the serial communication
 }
 
