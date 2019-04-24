@@ -17,14 +17,15 @@
 
 
 struct table{
-	volatile int pulse;
-	volatile int flag;
-	int dist;
+	volatile int timer;
+	volatile int echoDone;
+	float dist;
 	float prev[5];
 };
 typedef struct table sensor;
 
-int Sensor_Init();
+void Sensor_Init();
+float getDistance();
 static sensor sensors[NUM_SENSOR];
 
 

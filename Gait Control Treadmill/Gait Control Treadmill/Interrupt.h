@@ -21,65 +21,74 @@ ISR(TIMER0_COMPB_vect){
 	//LED_OFF;
 }
 
-/*ISR(INT0_vect){
-	if (sensors[0].flag == 1){
-		TCCR1B = 0;
-		sensors[0].pulse = TCNT1;
-		TCNT1 = 0;
-		char s[5];
-		char space[] = "  ";
-		sprintf(s, "%d", sensors[1].flag);
-		USART_putstring(s);
-		sensors[0].flag = 0;
-	}
-	if (sensors[0].flag == 0){
-		PORTB |= (1<<PORTB5);
-		TCCR1B |= (1<<CS10);
-		char s[5];
-		char space[] = "  ";
-		sprintf(s, "%d", sensors[1].flag);
-		USART_putstring(s);
-		sensors[0].flag = 1;
+ISR(TIM1_OVF_vect){
+    // increment
+    sensors[0].timer += 65535;
+}
+ISR(TIM3_OVF_vect){
+    // increment
+    sensors[1].timer += 65535;
+}
+ISR(TIM4_OVF_vect){
+    // increment
+    sensors[2].timer += 65535;
+}
 
-	}
-	LED_TOGGLE;
-	//_delay_ms(10000);
-}*/
+ISR(INT0_vect){
+    if (PIND & (1<<PORTD2)) {
+        // rising edge: start timer1(16-bit)
+        TCCR1B |= (1<<CS10);
+        // set overflow interrupt flag
+        TIMSK1 |= (1<<TOIE1);
+    }
+    else {
+        // falling edge: stop timer
+        TCCR1B &= ~(1<<CS10);
+        // calculate time passed
+        sensors[0].timer += TCNT1;
+        // reset counter
+        TCNT1 = 0;
+        // set flag
+        sensors[0].echoDone = 1;
+    }
+}
 
-/*ISR(INT1_vect){
-	LED_TOGGLE;
-	//_delay_ms(10000);
-	if (sensors[1].flag == 1){
-		//TCCR3B = 0;
-		//sensors[1].pulse = TCNT3;
-		//TCNT3 = 0;
-		char s[5];
-		char space[] = "  ";
-		sprintf(s, "%d", sensors[1].flag);
-		USART_putstring(s);
-		sensors[1].flag = 0;
-	}
-	if (sensors[1].flag == 0){
-		//TCCR3B |= (1<<CS30);
-		char s[5];
-		char space[] = "  ";
-		sprintf(s, "%d", sensors[1].flag);
-		USART_putstring(s);
-		sensors[1].flag = 1;
+ISR(INT1_vect){
+	if (PIND & (1<<PORTD3)){
+        // rising edge: start timer3(16-bit)
+        TCCR3B |= (1<<CS30);
 
+        TIMSK3 |= (1<<TOIE3);
 	}
-}*/
+	else{
+        // falling edge: stop timer
+        TCCR3B &= ~(1<<CS30);
+        // calculate time passed
+        sensors[1].timer += TCNT3;
+        // reset counter
+        TCNT3 = 0;
+        // set flag
+        sensors[1].echoDone = 1;
+	}
+}
+
 ISR(PCINT0_vect){
-	if (sensors[2].flag == 1){
-		TCCR4B = 0;
-		sensors[2].pulse = TCNT4;
-		TCNT4 = 0;
-		sensors[2].flag = 0;
-	}
-	if (sensors[2].flag == 0){
-		TCCR4B |= (1<<CS40);
-		sensors[2].flag = 1;
-	}
+    if (PINB & (1<<PORTB4)){
+        // rising edge: start timer3(16-bit)
+        TCCR4B |= (1<<CS40);
+        
+        TIMSK4 |= (1<<TOIE4);
+    }
+    else{
+        // falling edge: stop timer
+        TCCR4B &= ~(1<<CS40);
+        // calculate time passed
+        sensors[2].timer += TCNT4;
+        // reset counter
+        TCNT4 = 0;
+        // set flag
+        sensors[2].echoDone = 1;
+    }
 }
 
 #endif /* INTERRUPT_H_ */

@@ -11,105 +11,34 @@
 #define BAUD				9600
 #define MYUBBR				F_CPU/16/BAUD-1
 
-// 1/0 flag to check if echo is over
-volatile char echoDone = 0;
-// current timer0 count
-uint32_t countTimer1 = 0;
-
-int getDistanceHCSR04(){
-    // Send a 10us HIGH pulse on the Trigger pin.
-    // The sensor sends out a “sonic burst” of 8 cycles.
-    // Listen to the Echo pin, and the duration of the next HIGH
-    // signal will give you the time taken by the sound to go back
-    // and forth from sensor to target.
-    
-    int distance = 0;
-
-    cli();
-    // enable interrupt
-    EICRA |= (1<<ISC00);
-    EIMSK |= (1<<INT0);
-    sei();
-    
-    // set echo flag & reset counter
-    echoDone = 0;
-    countTimer1 = 0;
-    
-    // send 10us trigger pulse
-    PORTB &= ~(1 << PORTB3);
-    _delay_us(20);
-    
-    PORTB |= (1 << PORTB3);
-    _delay_us(12);
-    PORTB &= ~(1 << PORTB3);
-    _delay_us(20);
-    
-    // listen for echo and time it
-    // loop till echo pin goes low
-    while(!echoDone){
-		LED_TOGGLE;
-		
-	}
-    
-    // disable pin-change interrupt:
-    // disable interrupt
-    EICRA &= ~(1<<ISC00);
-    EIMSK &= ~(1<<INT0);
-    
-    // calculate duration
-    int duration = countTimer1/16000000;
-    
-    // dist = duration * speed of sound * 1/2
-    // dist in cm = duration in s * 340.26 * 100 * 1/2
-    // = 17013*duration
-    distance = 17013 * duration;
-    
-    return distance;
-}
-
-// timer0 overflow interrupt
-ISR(TIM1_OVF_vect){
-    // increment
-    countTimer1 += 65535;
-}
-
-// pin-change interrupt handler
-ISR(INT0_vect){
-    // read PORTD2:
-    if (PIND & (1 << PORTD2)) {
-        // rising edge:
-        // start 16-bit timer
-        // Divide by 1
-        TCCR1B |= (1<<CS10);
-        // set overflow interrupt flag
-        TIMSK1 |= 1<<TOIE1;
-    }
-    else {
-        // falling edge
-        // stop timer
-        TCCR1B &= ~(1<<CS10);
-        // calculate time passed
-        countTimer1 += TCNT1;
-        // reset counter in timer0
-        TCNT1 = 0;
-        // set flag
-        echoDone = 1;
-    }
-}
-
 int main(){
+    char hi[] = "hello world!";
+    DDRB |= (1<<DDB5);
+    Sensor_Init();
+    PWM_Init_8();
+    USART_Init(MYUBBR);
+    USART_putstring(hi);
+    
     // HC-SR04
     DDRB |= (1<<PORTB3);
     DDRD &= ~(1<<PORTD2);
 	PORTD |= (1<<PORTD2);
-    USART_Init(MYUBBR);
     
     char str[16];
     char space[] = " .";
     int prevDist = 0;
 
     while (1) {
-        int dist = getDistanceHCSR04();
+        // Put the Trig low at first
+        PORTB &= ~(1<<PORTB3);
+        _delay_us(20);
+        
+        // Put Trig Pin high at least 10us
+        PORTB |= (1 << PORTB3);
+        _delay_us(12);
+        
+        
+        int dist = getDistance();
         // sensor only works till 400 cm - if it exceeds, this value just send previous reading
         //if (dist > 400 || dist < 2) dist = prevDist;
         
@@ -122,28 +51,12 @@ int main(){
     return 0;
 }
 
+int main(){
 
-
-
-
-
-
-
-
-
-/*int main(){
-	DDRB |= (1<<DDB5);
-	Sensor_Init();
-	//char sss[10];
-	USART_Init(MYUBBR);
-	//sprintf(sss, "%d", a);
-	//USART_putstring(sss);
 	//char s2[] = "hello";
 
     //PWM_Init_8();
 	sei();
-	//char space[] = "  flag:";
-	//char question[] = "  ";
 	unsigned int cur = 0;
     while (1){
 		char s[5];
@@ -177,6 +90,6 @@ int main(){
 		//cur = sensors[0].pulse/58;
 	}
 	return 0;
-}*/
+}
 
 
