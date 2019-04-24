@@ -1,7 +1,6 @@
 #define NUM_SENSOR    3
 #define TrigPin       9
 #define FREQ          5000
-#define F_CPU         16000000
 #define PRESCALE      64
 struct table{
   //const int trigPin;
@@ -16,15 +15,14 @@ sensor sensors[NUM_SENSOR];
 
 void PWM_Init(){
   pinMode(3, OUTPUT);
+  pinMode(11, OUTPUT);
   // FAST PWM mode with TOP(OCR0A)
   
-  TCCR0A |= (1<<WGM01) | (1<<WGM00) | (1<<COM0A0); 
-  TCCR0B |= (1<<CS01) | (1<<CS00) | (1<<WGM02); 
-  TCCR0B &= ~(1<<CS02);
-  //TIMSK0 |= (1<<OCIE0A) | (1<<OCIE0B);
+  TCCR2A |= (1<<WGM21) | (1<<WGM20) | (1<<COM2B1) | (1<<COM2A0); 
+  TCCR2B |= (1<<CS22) | (1<<WGM22); 
    
-  OCR0A = F_CPU / PRESCALE / 50 / 2; // 5KHz
-  //OCR0B = (F_CPU / PRESCALE / FREQ) * 0.5 - 1; 
+  OCR2A = 49; // 5KHz
+  OCR2B = 24; //
 }
 
 
@@ -39,6 +37,7 @@ ISR(TIMER0_COMPA_vect){
 
 void setup() {
   int i;
+  noInterrupts();
   pinMode(9, OUTPUT); // Sets the trigPin as an Output
   for (i = 0; i < NUM_SENSOR; i++){
     //sensors[i].trigPin = 9;
@@ -56,6 +55,7 @@ void setup() {
 
 
 void loop() {
+  //digitalWrite(3, OC0A);
   int i;
   // Clears the TrigPin
   digitalWrite(TrigPin, LOW);
