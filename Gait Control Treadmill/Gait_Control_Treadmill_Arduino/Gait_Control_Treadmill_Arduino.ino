@@ -7,11 +7,8 @@
 struct table{
   int trigPin;
   int echoPin;
-  float test_model;
-  float prev_diff;
   float prev_dist[SIZE];
   int next; 
-  int count; 
 };
 typedef struct table sensor;
 
@@ -33,12 +30,17 @@ void PWM_Increase_duty_8(){
   uint8_t period = OCR2A;
   uint8_t duty = OCR2B;
 
+  //if (period < 255) period++;
+  //else period = 0;
+
+  //OCR2A = period;
   if (duty < period) duty++;
-  else duty = period;
+  else duty = 1;
 
   OCR2B = duty;
 }
 void PWM_Decrease_duty_8(){
+  //uint8_t period = OCR2A;
   uint8_t duty = OCR2B;
 
   if (duty > 1) duty--;
@@ -70,10 +72,8 @@ void setup() {
   
   sensors[2].trigPin = 12;
   sensors[2].echoPin = 6;
-  
   for (int i = 0; i < NUM_SENSOR; i++){
     sensors[i].next = 0;
-    sensors[i].test_model = CENTER;
     pinMode(sensors[i].echoPin, INPUT);  // Sets the echoPin as an Input
     pinMode(sensors[i].trigPin, OUTPUT); // Sets the trigPin as an Output
     for (int j = 0; j < 10; j++) sensors[i].prev_dist[j] = 0.0;
@@ -86,9 +86,9 @@ void setup() {
 
 
 void loop() {
-  //PWM_Increase_duty_8();
-  float average = 0.0;
+  //float average = 0.0;
   for (int i = 0; i < NUM_SENSOR; i++){
+    if (i == 0){
     // Clears the TrigPin
     digitalWrite(sensors[i].trigPin, LOW);
     delayMicroseconds(2);
@@ -102,16 +102,50 @@ void loop() {
     sensors[i].prev_dist[sensors[i].next] = pulseIn(sensors[i].echoPin, HIGH) * 0.034 / 2;
 
     // Eliminate abnormal value by comparing prev sensor value
-    sensors[i].prev_dist[sensors[i].next] = eliminate(i);
+    //sensors[i].prev_dist[sensors[i].next] = eliminate(i);
     
-    average += sensors[i].prev_dist[sensors[i].next];
+    //average += sensors[i].prev_dist[sensors[i].next];
     
     Serial.print("Distance: ");
     Serial.println(sensors[i].prev_dist[sensors[i].next]);
     sensors[i].next = (sensors[i].next + 1) % SIZE;
+    }
   }
-  average /= 3.0;
-  
-  if (average - CENTER > 15.0f) PWM_Increase_duty_8();
-  else if (average - CENTER < -15.0f) PWM_Decrease_duty_8();
+  //average /= 3.0;
+  PWM_Increase_duty_8();
+  //if (average - CENTER > 15.0f) PWM_Increase_duty_8();
+  //else if (average - CENTER < -15.0f) PWM_Decrease_duty_8();
 }
+
+
+
+#include <I2C.h>
+
+
+void setup()
+{
+ Serial.begin(115200); //setup the serial port
+ I2c.begin();
+}
+void loop()
+{
+ uint16_t i;
+ while(1)
+ {
+ //Lidar 1
+   I2c.write(0x10,'D'); //take single measurement
+   I2c.read(0x10,2); // request 2 bytes from tinyLiDAR
+   i = I2c.receive(); // receive MSB byte
+   i = i<<8 | I2c.receive(); // receive LSB byte and put them together
+   Serial.print("0x10: ");
+   Serial.println(i); // print distance in mm
+ //Lidar 2
+   I2c.write(0x21,'D'); //take single measurement
+   I2c.read(0x21,2); // request 2 bytes from tinyLiDAR
+   i = I2c.receive(); // receive MSB byte
+   i = i<<8 | I2c.receive(); // receive LSB byte and put them together
+   Serial.print("0x21: ");
+   Serial.println(i); // print distance in mm
+ delay(100); // delay as required (30ms or higher in default single step mode)
+ }
+} 
