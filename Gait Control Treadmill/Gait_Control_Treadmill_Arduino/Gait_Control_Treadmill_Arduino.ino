@@ -1,11 +1,13 @@
 #define NUM_SENSOR    3
 #define FREQ          5000
 #define PRESCALE      64
-#define CENTER        30.0
+#define CENTER        50.0
+
 struct table{
   int trigPin;
   int echoPin;
   float test_model;
+  float prev_diff;
   float prev_dist[10];
   int next;  
 };
@@ -30,15 +32,15 @@ void PWM_Increase_duty_8(){
   uint8_t duty = OCR2B;
 
   if (duty < period) duty++;
-  else duty = 0;
+  else duty = period;
 
   OCR2B = duty;
 }
 void PWM_Decrease_duty_8(){
   uint8_t duty = OCR2B;
 
-  if (duty > 0) duty--;
-  else duty = 0;
+  if (duty > 1) duty--;
+  else duty = 1;
 
   OCR2B = duty;
 }
@@ -50,8 +52,8 @@ float sensor_interp(int idx, float test_model){
     
   for(int i = 0; i < 10; i++){
     float cur_val = sensors[idx].prev_dist[i];
-    perc_err = ((float)(abs(test_model - cur_val))) / cur_val;
-    if (perc_err < 0.05){ 
+    perc_err = cur_val - test_model;
+    if (perc_err < 20.0f){ 
       count++; 
       valid += cur_val;
     }
@@ -84,18 +86,20 @@ void setup() {
     sensors[i].test_model = CENTER;
     pinMode(sensors[i].echoPin, INPUT);  // Sets the echoPin as an Input
     pinMode(sensors[i].trigPin, OUTPUT); // Sets the trigPin as an Output
-    for (int j = 0; j < 10; j++) sensors[i].prev_dist[j] = 0;
+    for (int j = 0; j < 10; j++) sensors[i].prev_dist[j] = 0.0;
   }
   PWM_Init();
   Serial.begin(9600); // Starts the serial communication
 }
 
 
+
+
 void loop() {
   //PWM_Increase_duty_8();
 
   for (int i = 0; i < NUM_SENSOR; i++){
-    if (i == 2){
+     if (i == 0){
       // Clears the TrigPin
       digitalWrite(sensors[i].trigPin, LOW);
       delayMicroseconds(2);
@@ -104,14 +108,17 @@ void loop() {
       digitalWrite(sensors[i].trigPin, HIGH);
       delayMicroseconds(12);
       digitalWrite(sensors[i].trigPin, LOW);
-    
       // Reads the echoPin, returns the sound wave travel time in microseconds
       sensors[i].prev_dist[sensors[i].next] = pulseIn(sensors[i].echoPin, HIGH) * 0.034 / 2;
-      sensors_interp();
+      sensors[i].prev_diff = sensors[i].prev_dist[sensors[i].next] - CENTER;
+      
       Serial.print("Distance: ");
-      Serial.println(sensors[i].test_model);
+      Serial.println(sensors[i].prev_dist[sensors[i].next]);
       sensors[i].next = (sensors[i].next + 1) % 10;
-    }
+     }
   }
-
+  //if (sensors[0].prev_diff > 10.0f && sensors[1].prev_diff > 10.0f && sensors[2].prev_diff > 10.0f) PWM_Increase_duty_8();
+  //else if (sensors[0].prev_diff < -10.0f && sensors[1].prev_diff < -10.0f && sensors[2].prev_diff < -10.0f) PWM_Increase_duty_8();
+  //if (sensors[0].prev_diff > 10.0f) PWM_Increase_duty_8();
+  //else if (sensors[0].prev_diff < -10.0f) PWM_Decrease_duty_8();
 }
