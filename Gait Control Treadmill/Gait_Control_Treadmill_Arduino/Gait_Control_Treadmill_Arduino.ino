@@ -116,36 +116,3 @@ void loop() {
   //if (average - CENTER > 15.0f) PWM_Increase_duty_8();
   //else if (average - CENTER < -15.0f) PWM_Decrease_duty_8();
 }
-
-
-
-#include <I2C.h>
-
-
-void setup()
-{
- Serial.begin(115200); //setup the serial port
- I2c.begin();
-}
-void loop()
-{
- uint16_t i;
- while(1)
- {
- //Lidar 1
-   I2c.write(0x10,'D'); //take single measurement
-   I2c.read(0x10,2); // request 2 bytes from tinyLiDAR
-   i = I2c.receive(); // receive MSB byte
-   i = i<<8 | I2c.receive(); // receive LSB byte and put them together
-   Serial.print("0x10: ");
-   Serial.println(i); // print distance in mm
- //Lidar 2
-   I2c.write(0x21,'D'); //take single measurement
-   I2c.read(0x21,2); // request 2 bytes from tinyLiDAR
-   i = I2c.receive(); // receive MSB byte
-   i = i<<8 | I2c.receive(); // receive LSB byte and put them together
-   Serial.print("0x21: ");
-   Serial.println(i); // print distance in mm
- delay(100); // delay as required (30ms or higher in default single step mode)
- }
-} 
