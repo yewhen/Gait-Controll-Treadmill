@@ -35,7 +35,7 @@ void PWM_Increase_duty_8(){
 
   //OCR2A = period;
   if (duty < period) duty++;
-  else duty = 1;
+  else duty = period;
 
   OCR2B = duty;
 }
@@ -86,7 +86,7 @@ void setup() {
 
 
 void loop() {
-  //float average = 0.0;
+  float average = 0.0;
   for (int i = 0; i < NUM_SENSOR; i++){
     if (i == 0){
     // Clears the TrigPin
@@ -104,7 +104,7 @@ void loop() {
     // Eliminate abnormal value by comparing prev sensor value
     //sensors[i].prev_dist[sensors[i].next] = eliminate(i);
     
-    //average += sensors[i].prev_dist[sensors[i].next];
+    average = sensors[i].prev_dist[sensors[i].next];
     
     Serial.print("Distance: ");
     Serial.println(sensors[i].prev_dist[sensors[i].next]);
@@ -112,7 +112,8 @@ void loop() {
     }
   }
   //average /= 3.0;
-  PWM_Increase_duty_8();
-  //if (average - CENTER > 15.0f) PWM_Increase_duty_8();
-  //else if (average - CENTER < -15.0f) PWM_Decrease_duty_8();
+  //PWM_Increase_duty_8();
+  if (average - CENTER > 15.0f) PWM_Decrease_duty_8();
+  else if (average - CENTER < -15.0f) PWM_Increase_duty_8();
 }
+

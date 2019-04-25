@@ -14,7 +14,7 @@ typedef struct table sensor;
 sensor sensors[NUM_SENSOR];
 
 void PWM_Init(){
-  /*pinMode(3, OUTPUT);
+  pinMode(3, OUTPUT);
   pinMode(11, OUTPUT);
   // FAST PWM mode with TOP(OCR0A)
   
@@ -22,9 +22,9 @@ void PWM_Init(){
   TCCR2B |= (1<<CS22) | (1<<WGM22); 
    
   OCR2A = 49; // 5KHz
-  OCR2B = 24; //*/
+  OCR2B = 24; //
 
-  pinMode(6, OUTPUT);
+  /*pinMode(6, OUTPUT);
   pinMode(5, OUTPUT);
   // FAST PWM mode with TOP(OCR0A)
   TCCR0A = 0;
@@ -35,17 +35,17 @@ void PWM_Init(){
    
   OCR0A = 49; // 5KHz
   OCR0B = 24; //
-  
+  */
 }
 
 void PWM_Increase_duty_8(){
-  uint8_t period = OCR0A;
-  uint8_t duty = OCR0B;
+  uint8_t period = OCR2A;
+  uint8_t duty = OCR2B;
 
   if (duty < period) duty++;
-  else duty = 0;
+  else duty = period;
 
-  OCR0B = duty;
+  OCR2B = duty;
 }
 void PWM_Decrease_duty_8(){
   uint8_t duty = OCR2B;
@@ -80,7 +80,7 @@ void setup() {
   I2c.begin();
 }
 void loop(){
-  /*uint16_t i;  
+  uint16_t i;  
   //Lidar 1
   i = 0;
   I2c.write(0x10,'D'); //take single measurement
@@ -90,28 +90,30 @@ void loop(){
   Serial.print("0x10: ");
   Serial.println(i); // print distance in mm
   sensors[0].prev_dist[sensors[0].next] = i; 
-  sensors[0].prev_dist[sensors[0].next] = eliminate(0);  
   
   //Lidar 2
-  i = 0;
+  /*i = 0;
   I2c.write(0x21,'D'); //take single measurement
   I2c.read(0x21,2); // request 2 bytes from tinyLiDAR
   i = I2c.receive(); // receive MSB byte
   i = i<<8 | I2c.receive(); // receive LSB byte and put them together
   Serial.print("0x21: ");
   Serial.println(i); // print distance in mm
-  sensors[1].prev_dist[sensors[1].next] = i; 
-  sensors[1].prev_dist[sensors[1].next] = eliminate(1);
+  sensors[1].prev_dist[sensors[1].next] = i; */
   
-  if (abs(sensors[i].prev_dist[sensors[i].next] - sensors[i].prev_dist[sensors[i].next]) < 100){
-    uint16_t average = (sensors[i].prev_dist[sensors[i].next] + sensors[i].prev_dist[sensors[i].next]) / 2;
+  //if (abs(sensors[0].prev_dist[sensors[0].next] - sensors[1].prev_dist[sensors[1].next]) < 100){
+    uint16_t average = sensors[0].prev_dist[sensors[0].next]/* + sensors[1].prev_dist[sensors[1].next]) / 2*/;
     
-    //if (average - CENTER > 150) PWM_Increase_duty_8();
-    //else if (average - CENTER < 150) PWM_Decrease_duty_8();    
-  }*/
-  PWM_Increase_duty_8();
-  //sensors[0].next = (sensors[0].next + 1) % SIZE;
-  //sensors[1].next = (sensors[1].next + 1) % SIZE;  
+    if (average > CENTER){
+      /*if (average - CENTER > 50)*/ PWM_Decrease_duty_8();
+    }
+    else if (average < CENTER){
+      if (CENTER - average > 50) PWM_Increase_duty_8();    
+    }
+    else PWM_Decrease_duty_8();
+  //}
+  sensors[0].next = (sensors[0].next + 1) % SIZE;
+  sensors[1].next = (sensors[1].next + 1) % SIZE;  
 
-  //delay(100); // delay as required (30ms or higher in default single step mode)
+  delay(100); // delay as required (30ms or higher in default single step mode)
 }
