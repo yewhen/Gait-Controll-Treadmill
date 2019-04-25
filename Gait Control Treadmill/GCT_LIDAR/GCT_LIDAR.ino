@@ -105,15 +105,15 @@ void loop(){
     uint16_t average = sensors[0].prev_dist[sensors[0].next]/* + sensors[1].prev_dist[sensors[1].next]) / 2*/;
     
     if (average > CENTER){
-      /*if (average - CENTER > 50)*/ PWM_Decrease_duty_8();
+      if (average - CENTER > 50) PWM_Decrease_duty_8();
     }
     else if (average < CENTER){
       if (CENTER - average > 50) PWM_Increase_duty_8();    
     }
-    else PWM_Decrease_duty_8();
+    //else PWM_Decrease_duty_8();
   //}
   sensors[0].next = (sensors[0].next + 1) % SIZE;
-  sensors[1].next = (sensors[1].next + 1) % SIZE;  
+  //sensors[1].next = (sensors[1].next + 1) % SIZE;  
 
   delay(100); // delay as required (30ms or higher in default single step mode)
 }
