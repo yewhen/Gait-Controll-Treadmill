@@ -1,6 +1,7 @@
 #define NUM_SENSOR    3
 #define FREQ          5000
 #define PRESCALE      64
+#define ABNORMAL      10
 #define CENTER        50.0
 
 struct table{
@@ -9,7 +10,8 @@ struct table{
   float test_model;
   float prev_diff;
   float prev_dist[10];
-  int next;  
+  int next; 
+  int count; 
 };
 typedef struct table sensor;
 
@@ -70,6 +72,12 @@ float sensors_interp(){
   return sensors[2].test_model;
 }
 
+float eliminate(int idx){
+  int cur = sensors[idx].next;
+  if (cur == 0){
+    if ()  
+  }  
+}
 
 void setup() {
   sensors[0].trigPin = 9;
