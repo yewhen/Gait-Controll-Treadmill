@@ -1,7 +1,7 @@
 #define NUM_SENSOR    3
 #define FREQ          5000
 #define PRESCALE      64
-#define ABNORMAL      10
+#define SIZE          10
 #define CENTER        50.0
 
 struct table{
@@ -9,7 +9,7 @@ struct table{
   int echoPin;
   float test_model;
   float prev_diff;
-  float prev_dist[10];
+  float prev_dist[SIZE];
   int next; 
   int count; 
 };
@@ -47,36 +47,18 @@ void PWM_Decrease_duty_8(){
   OCR2B = duty;
 }
 
-float sensor_interp(int idx, float test_model){
-  float perc_err; 
-  int count = 0;
-  float valid = 0; 
-    
-  for(int i = 0; i < 10; i++){
-    float cur_val = sensors[idx].prev_dist[i];
-    perc_err = cur_val - test_model;
-    if (perc_err < 20.0f){ 
-      count++; 
-      valid += cur_val;
-    }
-  }
-  return valid/count; 
-}
-
-float sensors_interp(){
-  float sum = 0.0;
-  for (int i = 0; i < NUM_SENSOR; i++){
-    if (i == 2) sensors[i].test_model = sensor_interp(i, sensors[i].test_model);  
-  }
-  //return sum / 3.0;
-  return sensors[2].test_model;
-}
-
 float eliminate(int idx){
   int cur = sensors[idx].next;
   if (cur == 0){
-    if ()  
+    if (sensors[idx].prev_dist[SIZE-1] == 0.0f) return sensors[idx].prev_dist[cur];
+    else if (abs((float)(sensors[idx].prev_dist[SIZE-1] - sensors[idx].prev_dist[cur])) > 10.0f) return sensors[idx].prev_dist[SIZE-1];
+    else return sensors[idx].prev_dist[cur]; 
   }  
+  else{
+    if (abs((float)(sensors[idx].prev_dist[cur-1] - sensors[idx].prev_dist[cur])) > 10.0f) return sensors[idx].prev_dist[cur-1];
+    else return sensors[idx].prev_dist[cur];    
+  }
+  return 0.0;
 }
 
 void setup() {
@@ -105,28 +87,31 @@ void setup() {
 
 void loop() {
   //PWM_Increase_duty_8();
-
+  float average = 0.0;
   for (int i = 0; i < NUM_SENSOR; i++){
-     if (i == 0){
-      // Clears the TrigPin
-      digitalWrite(sensors[i].trigPin, LOW);
-      delayMicroseconds(2);
-      
-      // Sets the trigPin on HIGH state for at least 10 micro seconds
-      digitalWrite(sensors[i].trigPin, HIGH);
-      delayMicroseconds(12);
-      digitalWrite(sensors[i].trigPin, LOW);
-      // Reads the echoPin, returns the sound wave travel time in microseconds
-      sensors[i].prev_dist[sensors[i].next] = pulseIn(sensors[i].echoPin, HIGH) * 0.034 / 2;
-      sensors[i].prev_diff = sensors[i].prev_dist[sensors[i].next] - CENTER;
-      
-      Serial.print("Distance: ");
-      Serial.println(sensors[i].prev_dist[sensors[i].next]);
-      sensors[i].next = (sensors[i].next + 1) % 10;
-     }
+    // Clears the TrigPin
+    digitalWrite(sensors[i].trigPin, LOW);
+    delayMicroseconds(2);
+    
+    // Sets the trigPin on HIGH state for at least 10 micro seconds
+    digitalWrite(sensors[i].trigPin, HIGH);
+    delayMicroseconds(12);
+    digitalWrite(sensors[i].trigPin, LOW);
+
+    // Reads the echoPin, returns the sound wave travel time in microseconds
+    sensors[i].prev_dist[sensors[i].next] = pulseIn(sensors[i].echoPin, HIGH) * 0.034 / 2;
+
+    // Eliminate abnormal value by comparing prev sensor value
+    sensors[i].prev_dist[sensors[i].next] = eliminate(i);
+    
+    average += sensors[i].prev_dist[sensors[i].next];
+    
+    Serial.print("Distance: ");
+    Serial.println(sensors[i].prev_dist[sensors[i].next]);
+    sensors[i].next = (sensors[i].next + 1) % SIZE;
   }
-  //if (sensors[0].prev_diff > 10.0f && sensors[1].prev_diff > 10.0f && sensors[2].prev_diff > 10.0f) PWM_Increase_duty_8();
-  //else if (sensors[0].prev_diff < -10.0f && sensors[1].prev_diff < -10.0f && sensors[2].prev_diff < -10.0f) PWM_Increase_duty_8();
-  //if (sensors[0].prev_diff > 10.0f) PWM_Increase_duty_8();
-  //else if (sensors[0].prev_diff < -10.0f) PWM_Decrease_duty_8();
+  average /= 3.0;
+  
+  if (average - CENTER > 15.0f) PWM_Increase_duty_8();
+  else if (average - CENTER < -15.0f) PWM_Decrease_duty_8();
 }
