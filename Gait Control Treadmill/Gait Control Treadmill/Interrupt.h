@@ -15,10 +15,10 @@
 #define LED_TOGGLE			PINB |= (1<<PINB5)
 
 ISR(TIMER0_COMPA_vect){
-	//LED_ON;
+	PINB |= (1<<PINB4);
 }
 ISR(TIMER0_COMPB_vect){
-	//LED_OFF;
+	PINB |= (1<<PINB4);
 }
 
 ISR(TIM1_OVF_vect){
@@ -35,7 +35,8 @@ ISR(TIM4_OVF_vect){
 }
 
 ISR(INT0_vect){
-    if (PIND & (1<<PORTD2)) {
+	LED_TOGGLE;
+    /*if (PIND & (1<<PORTD2)) {
         // rising edge: start timer1(16-bit)
         TCCR1B |= (1<<CS10);
         // set overflow interrupt flag
@@ -50,7 +51,7 @@ ISR(INT0_vect){
         TCNT1 = 0;
         // set flag
         sensors[0].echoDone = 1;
-    }
+    }*/
 }
 
 ISR(INT1_vect){

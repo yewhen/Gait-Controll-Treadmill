@@ -25,7 +25,7 @@ struct table{
 typedef struct table sensor;
 
 void Sensor_Init();
-float getDistance();
+void getDistance();
 static sensor sensors[NUM_SENSOR];
 
 

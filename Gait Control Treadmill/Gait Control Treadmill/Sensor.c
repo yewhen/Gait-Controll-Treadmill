@@ -17,20 +17,20 @@ void Sensor_Init(){
     
 	// Echo Pin Setup: PD2(EXTINT0), PD3(EXTINT1), PB5(PCINT0)
 	DDRD &= ~(1<<DDD2); 
-	DDRD &= ~(1<<DDD3);
-	DDRB &= ~(1<<DDB4);
+	//DDRD &= ~(1<<DDD3);
+	//DDRB &= ~(1<<DDB4);
 
 	// Turn on the pull-up
 	PORTD |= (1<<PORTD2) | (1<<PORTD3);
-	PORTB |= (1<<PORTB4);
+	//PORTB |= (1<<PORTB4);
 	_delay_ms(50);
 
 	// Enable the Interrupt
 	EICRA |= (1<<ISC00) | (1<<ISC10); // Set INT0 & INT1 to trigger on ANY logic change
 	EIMSK |= (1<<INT0) | (1<<INT1);  // Turns on INT0 & INT1
 	
-	PCICR |= (1<<PCIE0);
-	PCMSK0 |= (1<<PCINT4);
+	//PCICR |= (1<<PCIE0);
+	//PCMSK0 |= (1<<PCINT4);
 
 	for (idx = 0; idx < NUM_SENSOR; idx++){
 		sensors[idx].timer = 0;
@@ -55,17 +55,17 @@ void getDistance(int idx){
     sei();
     
     // loop till echo pin goes low
-    while(!echoDone);
+    //while(!echoDone);
     
     // disable the global 
     cli();
     
     // calculate duration
-    float duration = countTimer0/F_CPU;
+    //float duration = countTimer0/F_CPU;
     
     // dist = duration * speed of sound * 1/2
     // dist in cm = duration in s * 340.26 * 100 * 1/2
     // = 17013*duration
-    sensors[idx].dist = 17013.0 * duration;
+    //sensors[idx].dist = 17013.0 * duration;
     
 }

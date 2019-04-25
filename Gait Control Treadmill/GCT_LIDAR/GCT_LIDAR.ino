@@ -14,7 +14,7 @@ typedef struct table sensor;
 sensor sensors[NUM_SENSOR];
 
 void PWM_Init(){
-  pinMode(3, OUTPUT);
+  /*pinMode(3, OUTPUT);
   pinMode(11, OUTPUT);
   // FAST PWM mode with TOP(OCR0A)
   
@@ -22,17 +22,30 @@ void PWM_Init(){
   TCCR2B |= (1<<CS22) | (1<<WGM22); 
    
   OCR2A = 49; // 5KHz
-  OCR2B = 24; //
+  OCR2B = 24; //*/
+
+  pinMode(6, OUTPUT);
+  pinMode(5, OUTPUT);
+  // FAST PWM mode with TOP(OCR0A)
+  TCCR0A = 0;
+  TCCR0B = 0;
+  
+  TCCR0A |= (1<<WGM01) | (1<<WGM00) | (1<<COM0B1) | (1<<COM0A0); 
+  TCCR0B |= (1<<CS01) | (1<<CS00) | (1<<WGM02); 
+   
+  OCR0A = 49; // 5KHz
+  OCR0B = 24; //
+  
 }
 
 void PWM_Increase_duty_8(){
-  uint8_t period = OCR2A;
-  uint8_t duty = OCR2B;
+  uint8_t period = OCR0A;
+  uint8_t duty = OCR0B;
 
   if (duty < period) duty++;
-  else duty = period;
+  else duty = 0;
 
-  OCR2B = duty;
+  OCR0B = duty;
 }
 void PWM_Decrease_duty_8(){
   uint8_t duty = OCR2B;
@@ -67,7 +80,7 @@ void setup() {
   I2c.begin();
 }
 void loop(){
-  uint16_t i;  
+  /*uint16_t i;  
   //Lidar 1
   i = 0;
   I2c.write(0x10,'D'); //take single measurement
@@ -92,12 +105,13 @@ void loop(){
   
   if (abs(sensors[i].prev_dist[sensors[i].next] - sensors[i].prev_dist[sensors[i].next]) < 100){
     uint16_t average = (sensors[i].prev_dist[sensors[i].next] + sensors[i].prev_dist[sensors[i].next]) / 2;
-    if (average - CENTER > 150) PWM_Increase_duty_8();
-    else if (average - CENTER < 150) PWM_Decrease_duty_8();    
-  }
-  
-  sensors[0].next = (sensors[0].next + 1) % SIZE;
-  sensors[1].next = (sensors[1].next + 1) % SIZE;  
+    
+    //if (average - CENTER > 150) PWM_Increase_duty_8();
+    //else if (average - CENTER < 150) PWM_Decrease_duty_8();    
+  }*/
+  PWM_Increase_duty_8();
+  //sensors[0].next = (sensors[0].next + 1) % SIZE;
+  //sensors[1].next = (sensors[1].next + 1) % SIZE;  
 
-  delay(100); // delay as required (30ms or higher in default single step mode)
+  //delay(100); // delay as required (30ms or higher in default single step mode)
 }
